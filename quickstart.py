@@ -29,7 +29,6 @@ def get_credentials():
 	store = oauth2client.file.Storage(credential_path)
 	credentials = store.get()
 	if not credentials or credentials.invalid:
-		print('Hello')
 		flow = client.flow_from_clientsecrets(CLIENT_SECRET_FILE, SCOPES)
 		flow.user_agent = APPLICATION_NAME
 		if flags:
@@ -43,10 +42,21 @@ def main():
 	credentials = get_credentials()
 	http = credentials.authorize(httplib2.Http())
 	service = discovery.build('calendar', 'v3', http=http)
-	
+
 	now = datetime.datetime.utcnow().isoformat() + 'Z'
 	print('Getting the upcoming 10 events')
-	eventResult = service.events().list(
+
+	calListResult = service.calendarList().list().execute()
+	calList = calListResult.get('items', [])
+	for cal in calList:
+		print('ID: ' + cal.get('id'))
+		print('summary: ' + cal.get('summary'))
+		#print('description: ' + str(cal.get('description')))
+		print('primary?: ' + str(cal.get('primary') == True))
+		print('')
+	return
+
+	eventsResult = service.events().list(
 		calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
 		orderBy='startTime').execute()
 	events = eventsResult.get('items', [])
